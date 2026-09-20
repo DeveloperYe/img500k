@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="纯前端图片压缩工具：批量上传/直链导入/ZIP 解压，自定义目标体积上限，保持原比例压缩，支持逐张/批量/ZIP 下载。图片不会离开你的浏览器。">
+  <title>图片压缩器</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9E%97%EF%B8%8F%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1>图片压缩器</h1>
+      <p>批量上传 / 直链导入 / ZIP 解压 · 自定义目标体积上限 · 保持原比例压缩 · 全程在浏览器本地完成，图片不会上传到任何服务器</p>
+    </header>
+
+    <main>
+      <section class="card upload-card">
+        <div class="tabs">
+          <button class="tab-btn active" data-tab="local" type="button">本地上传</button>
+          <button class="tab-btn" data-tab="url" type="button">图片直链</button>
+        </div>
+
+        <div class="tab-panel active" id="panel-local">
+          <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="点击或拖拽上传图片或压缩包">
+            <div class="dz-icon">📤</div>
+            <p class="dz-title">点击选择图片或压缩包，或拖拽到这里</p>
+            <p class="dz-hint">支持 JPG / PNG / WebP / GIF / BMP，或含图片的 ZIP 压缩包，可多选</p>
+            <input type="file" id="file-input" accept="image/*,.zip" multiple hidden>
+          </div>
+        </div>
+
+        <div class="tab-panel" id="panel-url">
+          <textarea id="url-input" rows="5" placeholder="每行一个图片直链，例如：&#10;https://example.com/a.jpg&#10;https://example.com/b.png"></textarea>
+          <div class="url-actions">
+            <span class="url-hint">源站不支持跨域时自动走公共图片代理兜底</span>
+            <button class="btn btn-primary" id="url-add-btn" type="button">添加图片</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="card options-card">
+        <label class="check-row" title="PNG 无法无损压到目标体积以内时，转为 JPEG/WebP 有损格式（透明背景会填充为白色）">
+          <input type="checkbox" id="opt-convert" checked>
+          <span>PNG 超限时自动转为 <b>WebP/JPEG</b>（透明底会变白，体积更小）</span>
+        </label>
+        <div class="size-control">
+          <div class="size-control-header">
+            <span class="sc-label">目标体积上限</span>
+            <div class="sc-input-row">
+              <b class="target-badge" id="target-badge">≤ 500 KB</b>
+              <div class="sc-manual">
+                <input type="number" id="size-input" min="10" max="10240" step="1" value="500">
+                <select id="size-unit">
+                  <option value="KB" selected>KB</option>
+                  <option value="MB">MB</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="sc-slider-wrap">
+            <input type="range" id="size-slider" min="0" max="4" step="1" value="1" list="size-ticks">
+            <datalist id="size-ticks">
+              <option value="0" label="200KB"></option>
+              <option value="1" label="500KB"></option>
+              <option value="2" label="1MB"></option>
+              <option value="3" label="2MB"></option>
+              <option value="4" label="5MB"></option>
+            </datalist>
+            <div class="sc-ticks">
+              <span>200KB</span>
+              <span>500KB</span>
+              <span>1MB</span>
+              <span>2MB</span>
+              <span>5MB</span>
+            </div>
+          </div>
+          <p class="sc-note">优先保持原始分辨率，只降画质；仍超限才等比缩小尺寸</p>
+        </div>
+      </section>
+
+      <section class="card toolbar" id="toolbar" hidden>
+        <div class="stats">
+          <span id="stat-count">0 张</span>
+          <span id="stat-before"></span>
+          <span id="stat-after"></span>
+          <span id="stat-saved" class="stat-saved"></span>
+        </div>
+        <div class="toolbar-actions">
+          <button class="btn" id="download-all-btn" type="button" disabled>⬇ 批量下载</button>
+          <button class="btn btn-primary" id="zip-btn" type="button" disabled>📦 下载 ZIP</button>
+          <button class="btn btn-ghost" id="clear-btn" type="button">清空</button>
+        </div>
+        <div class="progress-wrap" id="progress-wrap" hidden>
+          <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+          <span class="progress-text" id="progress-text"></span>
+        </div>
+      </section>
+
+      <section class="file-list" id="file-list"></section>
+
+      <p class="empty-tip" id="empty-tip">还没有图片……压缩后的文件会按 <b>p1、p2、p3 …</b> 命名，ZIP 包按 <b>p1-pN.zip</b> 命名。</p>
+    </main>
+
+    <footer class="footer">
+      <p>本工具基于开源项目 <a href="https://github.com/Donaldcwl/browser-image-compression" target="_blank" rel="noopener">browser-image-compression</a> 与 <a href="https://github.com/Stuk/jszip" target="_blank" rel="noopener">JSZip</a> 构建（MIT 协议）。所有压缩均在浏览器本地完成。</p>
+    </footer>
+  </div>
+
+  <div class="toast" id="toast" hidden></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/dist/browser-image-compression.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
