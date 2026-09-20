@@ -1,0 +1,15 @@
+图片压缩器 (image-compressor)
+Copyright 2026 DeveloperYe
+
+本项目基于 Apache License 2.0 发布，许可证全文见 LICENSE 文件。
+
+本项目运行时通过 jsdelivr CDN 引用以下第三方开源库，均未修改源码，各自版权归其原作者所有，并遵守各自的 MIT 许可证：
+
+  - browser-image-compression 2.0.2  (c) Donaldcwl 及贡献者
+  - JSZip 3.10.1                  (c) Stuart Knightley, David Duponchel,
+                                      Franz Buchinger, António Afonso
+
+第三方库的完整版权声明与许可证文本，请分别以其官方源码仓库中的 LICENSE 文件为准：
+
+  - https://github.com/Donaldcwl/browser-image-compression
+  - https://github.com/Stuk/jszip
